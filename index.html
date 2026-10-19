@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- แท็กไอคอนสำหรับ iOS (เพิ่มไปยังหน้าจอโฮม) -->
+    <link rel="apple-touch-icon" href="photoapp.png">
+
+    <!-- แท็กไอคอนสำหรับเบราว์เซอร์ทั่วไป / Android -->
+    <link rel="icon" type="image/png" href="photoapp.png">
+    <title>CP Retailink - ระบบสร้างลายน้ำ PM อัตโนมัติ</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #f8fafc;
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .canvas-container {
+            background-image: linear-gradient(45deg, #e2e8f0 25%, transparent 25%), linear-gradient(-45deg, #e2e8f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e2e8f0 75%), linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col justify-between selection:bg-blue-500 selection:text-white">
+
+    <!-- Header Banner -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-600 text-white p-2.5 rounded-xl shadow-md shadow-blue-500/20 flex items-center justify-center">
+                    <i data-lucide="stamp" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-slate-900 leading-tight flex items-center gap-2">
+                        ระบบสร้างลายน้ำ PM อัตโนมัติ
+                        <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold border border-blue-200">v4.1 Exact Template</span>
+                    </h1>
+                    <p class="text-xs text-slate-500">CP Retailink - สร้างรูป "ก่อนทำ" และ "หลังทำ" พร้อมกันทันที</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <span class="text-xs bg-emerald-50 text-emerald-700 font-medium px-3 py-1.5 rounded-full border border-emerald-200 flex items-center gap-1.5 shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    พร้อมใช้งาน
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Work Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+        
+        <!-- Controls Card -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm transition-all hover:shadow-md">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                    <i data-lucide="sliders" class="w-4 h-4 text-blue-600"></i>
+                    กรอกข้อมูลสำหรับใส่ลงในแม่แบบ
+                </h2>
+                <span class="text-[11px] text-slate-400">อัปเดตแบบเรียลไทม์ (Real-time)</span>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <!-- Date Picker Input -->
+                <div>
+                    <label for="pmDatePicker" class="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
+                        <span>1. วันที่เข้าทำ PM</span>
+                        <span id="formattedDatePreview" class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">-</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                        </div>
+                        <input type="date" id="pmDatePicker" class="w-full pl-10 pr-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-800 font-medium">
+                    </div>
+                </div>
+
+                <!-- Branch Name Input -->
+                <div>
+                    <label for="branchName" class="block text-xs font-semibold text-slate-700 mb-1.5">
+                        2. ชื่อสาขา
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <i data-lucide="map-pin" class="w-4 h-4"></i>
+                        </div>
+                        <input type="text" id="branchName" value="M407 BigC อ่างทอง" placeholder="ใส่ข้อมูล เช่น M407 BigC อ่างทอง" class="w-full pl-10 pr-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-800 font-medium">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Action Toolbar -->
+            <div class="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="text-xs text-slate-500 flex items-center gap-1.5">
+                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i>
+                    <span>ใช้ภาพโลโก้ต้นฉบับ <code class="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded border border-slate-200 font-mono text-[11px]">logocp.jpg</code> อัตโนมัติ</span>
+                </div>
+                
+                <button id="downloadAllBtn" class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold rounded-xl shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition-all transform active:scale-95 cursor-pointer">
+                    <i data-lucide="download-cloud" class="w-4 h-4"></i>
+                    ดาวน์โหลดทั้ง 2 รูป (ก่อนทำ + หลังทำ)
+                </button>
+            </div>
+        </div>
+
+        <!-- Real-time Live Previews Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- 1. Preview: BEFORE (ก่อนทำ) -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col justify-between space-y-4 transition-all hover:shadow-md">
+                <div>
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-amber-500 ring-4 ring-amber-100"></span>
+                            <h3 class="font-bold text-slate-800 text-sm">ตัวอย่าง: ลายน้ำ "ก่อนทำ"</h3>
+                        </div>
+                        <span class="bg-amber-50 text-amber-700 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-amber-200">รูปภาพที่ 1</span>
+                    </div>
+
+                    <!-- Canvas Container Frame -->
+                    <div class="canvas-container rounded-xl p-2 min-h-[260px] flex items-center justify-center relative overflow-hidden border border-slate-200">
+                        <canvas id="canvasBefore" class="max-w-full h-auto object-contain rounded-lg shadow-sm block bg-white"></canvas>
+                    </div>
+                </div>
+
+                <button id="downloadBeforeBtn" class="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    ดาวน์โหลดรูป "ก่อนทำ" (PNG)
+                </button>
+            </div>
+
+            <!-- 2. Preview: AFTER (หลังทำ) -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col justify-between space-y-4 transition-all hover:shadow-md">
+                <div>
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-emerald-100"></span>
+                            <h3 class="font-bold text-slate-800 text-sm">ตัวอย่าง: ลายน้ำ "หลังทำ"</h3>
+                        </div>
+                        <span class="bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">รูปภาพที่ 2</span>
+                    </div>
+
+                    <!-- Canvas Container Frame -->
+                    <div class="canvas-container rounded-xl p-2 min-h-[260px] flex items-center justify-center relative overflow-hidden border border-slate-200">
+                        <canvas id="canvasAfter" class="max-w-full h-auto object-contain rounded-lg shadow-sm block bg-white"></canvas>
+                    </div>
+                </div>
+
+                <button id="downloadAfterBtn" class="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    ดาวน์โหลดรูป "หลังทำ" (PNG)
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
+        &copy; 2026 CP Retailink Watermark Generator (Exact Template Matching)
+    </footer>
+
+    <!-- Main Logic Script -->
+    <script>
+        // System State
+        const state = {
+            pmDateText: '',
+            branchName: 'M407 BigC อ่างทอง',
+            logoImage: null
+        };
+
+        // Standard Template Canvas Resolution
+        const DEFAULT_WIDTH = 1180;
+        const DEFAULT_HEIGHT = 740;
+
+        // Canvas Elements
+        const canvasBefore = document.getElementById('canvasBefore');
+        const ctxBefore = canvasBefore.getContext('2d');
+        
+        const canvasAfter = document.getElementById('canvasAfter');
+        const ctxAfter = canvasAfter.getContext('2d');
+
+        // Input Elements
+        const pmDatePicker = document.getElementById('pmDatePicker');
+        const formattedDatePreview = document.getElementById('formattedDatePreview');
+        const branchNameInput = document.getElementById('branchName');
+
+        // Buttons
+        const downloadBeforeBtn = document.getElementById('downloadBeforeBtn');
+        const downloadAfterBtn = document.getElementById('downloadAfterBtn');
+        const downloadAllBtn = document.getElementById('downloadAllBtn');
+
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Convert Date Object to Short Thai Buddhist Year Format (e.g., 20/10/69)
+        function formatThaiShortDate(dateObj) {
+            if (!dateObj || isNaN(dateObj.getTime())) return '';
+            const day = dateObj.getDate();
+            const month = dateObj.getMonth() + 1;
+            const yearBE = dateObj.getFullYear() + 543;
+            const shortYear = yearBE.toString().slice(-2);
+            return `${day}/${month}/${shortYear}`;
+        }
+
+        // Initialize Default Date to Today
+        function initDate() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            pmDatePicker.value = `${yyyy}-${mm}-${dd}`;
+            
+            state.pmDateText = formatThaiShortDate(today);
+            formattedDatePreview.innerText = state.pmDateText;
+        }
+
+        // Load image helper promise
+        function loadImage(src) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.onload = () => resolve(img);
+                img.onerror = () => resolve(null);
+                img.src = src;
+            });
+        }
+
+        // Load background template file 'logocp.jpg'
+        async function loadLogoTemplate() {
+            const candidates = ['logocp.jpg', 'logocp.png', './logocp.jpg', './logocp.png'];
+            
+            let loadedImg = null;
+            for (const path of candidates) {
+                loadedImg = await loadImage(path);
+                if (loadedImg) break;
+            }
+
+            if (!loadedImg) {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = DEFAULT_WIDTH;
+                tempCanvas.height = DEFAULT_HEIGHT;
+                const tCtx = tempCanvas.getContext('2d');
+                drawExactLogoTemplateBackground(tCtx, DEFAULT_WIDTH, DEFAULT_HEIGHT, '');
+                loadedImg = new Image();
+                loadedImg.src = tempCanvas.toDataURL('image/jpeg');
+                await new Promise((r) => { loadedImg.onload = r; });
+            }
+
+            state.logoImage = loadedImg;
+            renderAll();
+        }
+
+        // Recreate the exact background template image matching logocp.jpg
+        function drawExactLogoTemplateBackground(cCtx, width, height, statusText) {
+            cCtx.fillStyle = '#FFFFFF';
+            cCtx.fillRect(0, 0, width, height);
+
+            cCtx.save();
+            cCtx.translate(width * 0.03, height * 0.05);
+            cCtx.scale(width / 1180, height / 740);
+
+            const colors = ['#39B54A', '#F7931E', '#ED1C24', '#00AEEF'];
+            const pillWidth = 36;
+            const pillHeight = 95;
+            const skewAngle = -0.22;
+            const spacing = 40;
+
+            colors.forEach((color, index) => {
+                cCtx.save();
+                cCtx.translate(index * spacing, 0);
+                cCtx.transform(1, 0, Math.tan(skewAngle), 1, 0, 0);
+                cCtx.fillStyle = color;
+                cCtx.beginPath();
+                if (cCtx.roundRect) {
+                    cCtx.roundRect(0, 0, pillWidth, pillHeight, 18);
+                } else {
+                    cCtx.rect(0, 0, pillWidth, pillHeight);
+                }
+                cCtx.fill();
+                cCtx.restore();
+            });
+
+            cCtx.save();
+            cCtx.translate(-5, 105);
+            cCtx.transform(1, 0, -0.12, 1, 0, 0);
+            cCtx.font = 'italic 900 56px "Prompt", "Sarabun", sans-serif';
+            cCtx.strokeStyle = '#FFFFFF';
+            cCtx.lineWidth = 12;
+            cCtx.strokeText('CP Retailink', 0, 40);
+            cCtx.fillStyle = '#1B3F75';
+            cCtx.fillText('CP Retailink', 0, 40);
+            cCtx.restore();
+            cCtx.restore();
+
+            cCtx.font = `bold ${Math.round(48 * (width / 1180))}px "Prompt", "Sarabun", sans-serif`;
+            cCtx.fillStyle = '#000000';
+            cCtx.fillText('วันที่เข้าทำ PM', width * 0.36, height * 0.30);
+
+            cCtx.font = `bold ${Math.round(72 * (width / 1180))}px "Prompt", "Sarabun", sans-serif`;
+            cCtx.fillStyle = '#000000';
+            cCtx.fillText('สาขา', width * 0.03, height * 0.58);
+
+            if (statusText) {
+                cCtx.font = `bold ${Math.round(140 * (width / 1180))}px "Prompt", "Sarabun", sans-serif`;
+                cCtx.fillStyle = '#000000';
+                cCtx.textAlign = 'center';
+                cCtx.fillText(statusText, width * 0.50, height * 0.90);
+                cCtx.textAlign = 'left';
+            }
+        }
+
+        // Draw Watermark Canvas for Before or After
+        function drawWatermarkCanvas(targetCanvas, targetCtx, isBefore) {
+            let width = DEFAULT_WIDTH;
+            let height = DEFAULT_HEIGHT;
+
+            if (state.logoImage) {
+                width = state.logoImage.naturalWidth || state.logoImage.width || DEFAULT_WIDTH;
+                height = state.logoImage.naturalHeight || state.logoImage.height || DEFAULT_HEIGHT;
+            }
+
+            targetCanvas.width = width;
+            targetCanvas.height = height;
+
+            targetCtx.clearRect(0, 0, width, height);
+
+            if (state.logoImage) {
+                targetCtx.drawImage(state.logoImage, 0, 0, width, height);
+            } else {
+                drawExactLogoTemplateBackground(targetCtx, width, height, '');
+            }
+
+            const statusText = isBefore ? 'ก่อนทำ' : 'หลังทำ';
+            targetCtx.font = `bold ${Math.round(140 * (width / 1180))}px "Prompt", "Sarabun", sans-serif`;
+            targetCtx.fillStyle = '#000000';
+            targetCtx.textAlign = 'center';
+            targetCtx.fillText(statusText, width * 0.50, height * 0.90);
+            targetCtx.textAlign = 'left';
+
+            const dateX = width * 0.65; //ตำแหน่ง แกนxy
+            const dateY = height * 0.33;
+
+            const branchX = width * 0.29;
+            const branchY = height * 0.60;
+
+            targetCtx.textBaseline = 'alphabetic';
+
+            if (state.pmDateText) {
+                const fontSizeDate = Math.round(70 * (width / 1000));
+                targetCtx.font = `bold ${fontSizeDate}px "Prompt", "Sarabun", sans-serif`;
+                targetCtx.fillStyle = '#000000';
+                targetCtx.fillText(state.pmDateText, dateX, dateY);
+            }
+
+            if (state.branchName) {
+                // ปรับขนาดฟอนต์ชื่อสาขาให้เท่ากับคำว่า "สาขา" (ใช้สเกล 72px เท่ากับคำว่าสาขาบนเทมเพลตมาตรฐาน)
+                const fontSizeBranch = Math.round(80 * (width / 1180));
+                targetCtx.font = `bold ${fontSizeBranch}px "Prompt", "Sarabun", sans-serif`;
+                targetCtx.fillStyle = '#000000';
+                targetCtx.fillText(state.branchName, branchX, branchY);
+            }
+        }
+
+        function renderAll() {
+            drawWatermarkCanvas(canvasBefore, ctxBefore, true);  // ก่อนทำ
+            drawWatermarkCanvas(canvasAfter, ctxAfter, false);    // หลังทำ
+        }
+
+        function downloadCanvas(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function setupEvents() {
+            pmDatePicker.addEventListener('change', (e) => {
+                if (e.target.value) {
+                    const selectedDate = new Date(e.target.value);
+                    state.pmDateText = formatThaiShortDate(selectedDate);
+                } else {
+                    state.pmDateText = '';
+                }
+                formattedDatePreview.innerText = state.pmDateText || '-';
+                renderAll();
+            });
+
+            branchNameInput.addEventListener('input', (e) => {
+                state.branchName = e.target.value;
+                renderAll();
+            });
+
+            downloadBeforeBtn.addEventListener('click', () => {
+                const branchClean = (state.branchName || 'สาขา').replace(/[^a-zA-Z0-9ก-๙]/g, '_');
+                downloadCanvas(canvasBefore, `PM_ก่อนทำ_${branchClean}.png`);
+            });
+
+            downloadAfterBtn.addEventListener('click', () => {
+                const branchClean = (state.branchName || 'สาขา').replace(/[^a-zA-Z0-9ก-๙]/g, '_');
+                downloadCanvas(canvasAfter, `PM_หลังทำ_${branchClean}.png`);
+            });
+
+            downloadAllBtn.addEventListener('click', () => {
+                const branchClean = (state.branchName || 'สาขา').replace(/[^a-zA-Z0-9ก-๙]/g, '_');
+                downloadCanvas(canvasBefore, `PM_1_ก่อนทำ_${branchClean}.png`);
+                setTimeout(() => {
+                    downloadCanvas(canvasAfter, `PM_2_หลังทำ_${branchClean}.png`);
+                }, 350);
+            });
+        }
+
+        document.fonts.ready.then(() => {
+            initDate();
+            setupEvents();
+            loadLogoTemplate();
+        });
+    </script>
+</body>
+</html>
